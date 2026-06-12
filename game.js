@@ -208,6 +208,10 @@
   }
 
   // -------------------- microphone / input intensity ---------------------
+  function openingAssist(stage) {
+    return clamp((4 - stage) / 3, 0, 1);
+  }
+
   // Returns 0..1 "shout intensity" for this frame.
   function readIntensity() {
     if (usingMic && analyser) {
@@ -218,8 +222,11 @@
       // adaptive noise floor: drift up slowly toward quiet ambient level
       if (avg < noiseFloor) noiseFloor += (avg - noiseFloor) * 0.05;
       else noiseFloor += (avg - noiseFloor) * 0.002;
-      const v = (avg - noiseFloor - 0.02) / 0.35;     // scale above floor
-      return clamp(v, 0, 1);
+      const assist = openingAssist(match ? match.stage : save.stage);
+      const gate = 0.02 - assist * 0.012;
+      const scale = 0.35 - assist * 0.1;
+      const v = clamp((avg - noiseFloor - gate) / scale, 0, 1);
+      return Math.pow(v, 1 - assist * 0.22);
     }
     // practice fallback
     return practiceHeld ? 0.85 : 0;
@@ -240,6 +247,7 @@
       result: null,          // 'win' | 'lose'
       intensity: 0,
       smoothInt: 0,
+      power: 0,
       burst: 0,              // sustained-loud accumulator
       multiplier: 1,
       screenShake: 0,
@@ -297,25 +305,27 @@
     m.aiPhase += dt * 2.2;
 
     // --- player input ---
+    const assist = openingAssist(m.stage);
     const raw = readIntensity();
     m.intensity = raw;
     m.smoothInt += (raw - m.smoothInt) * 0.35;
 
     // burst builds while loud, decays while quiet → unlocks higher multipliers
-    if (raw > 0.45) m.burst = Math.min(1, m.burst + dt * 0.9);
+    if (raw > 0.45 - assist * 0.12) m.burst = Math.min(1, m.burst + dt * (0.9 + assist * 0.25));
     else m.burst = Math.max(0, m.burst - dt * 1.4);
 
-    const power = m.smoothInt * (0.6 + m.burst * 0.8);
+    const power = clamp(m.smoothInt * (0.6 + m.burst * 0.8) * (1 + assist * 0.22), 0, 1);
+    m.power = power;
     m.multiplier = power < 0.18 ? 1 : power < 0.42 ? 3 : power < 0.72 ? 5 : 10;
 
     // --- opponent AI: base pressure + rhythmic waves + phase spikes ---
     const phaseRamp = 1 + (1 - m.timeLeft / MATCH_SECONDS) * 0.25; // pushes harder late
     const wave = 0.55 + 0.45 * Math.abs(Math.sin(m.aiPhase));
-    const aiPush = m.opp.aiBase * wave * phaseRamp;
+    const aiPush = m.opp.aiBase * (1 - assist * 0.28) * wave * phaseRamp;
     m.oppMouth += ((wave - 0.3) - m.oppMouth) * 0.2;
 
     // --- ball physics ---
-    const playerPush = power * 0.95;
+    const playerPush = power * (0.95 + assist * 0.12);
     const delta = (playerPush - aiPush) * dt * 0.62;
     m.ballX = clamp(m.ballX + delta, 0, 1);
     m.ballSpin += (playerPush + aiPush) * dt * 14;
@@ -623,7 +633,7 @@
     // bar
     ctx.fillStyle = '#11163a';
     ctx.fillRect(x, y, w, h);
-    const fill = clamp(m.smoothInt * (0.6 + m.burst * 0.8), 0, 1);
+    const fill = m.power || 0;
     const col = m.multiplier >= 10 ? '#ff4136' : m.multiplier >= 5 ? '#ff851b' : m.multiplier >= 3 ? '#ffdc00' : '#2ecc40';
     ctx.fillStyle = col;
     ctx.fillRect(x, y, w * fill, h);
