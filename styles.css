@@ -221,14 +221,6 @@ html, body {
 .result-title { font-size: 24px; text-shadow: 3px 3px 0 var(--shadow); }
 .result-title.win { color: var(--green); }
 .result-title.lose { color: var(--red); }
-.share-text {
-  font-size: 14px;
-  color: var(--yellow);
-  background: var(--bg2);
-  border: 3px solid #2b346b;
-  padding: 12px;
-  line-height: 1.5;
-}
 .replay {
   width: 100%;
   border: 3px solid #2b346b;

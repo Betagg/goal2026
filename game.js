@@ -920,7 +920,6 @@
     const title = $('result-title');
     title.textContent = m.result === 'win' ? 'YOU WIN' : 'YOU LOSE';
     title.className = 'result-title ' + (m.result === 'win' ? 'win' : 'lose');
-    $('result-share-text').textContent = lastResult.shareLine;
 
     const vid = $('replay-video');
     if (replayUrl) { vid.src = replayUrl; vid.style.display = ''; vid.load(); }
@@ -960,8 +959,6 @@
       opponentBands,
       playerScore,
       opponentScore,
-      winnerName: playerWon ? m.playerNation.name : m.opp.name,
-      shareLine: playerWon ? `I Beat ${m.opp.name}` : `${m.opp.name} stopped me… for now`,
       url: getShareUrl(),
     };
   }
@@ -1041,13 +1038,12 @@
 
     drawLogo(g, w / 2, 150);
     drawCenteredFit(g, won ? 'YOU WIN' : 'YOU LOSE', w / 2, 260, 860, 86, accent);
-    drawCenteredFit(g, data.shareLine.toUpperCase(), w / 2, 344, 900, 34, '#ffdc00');
 
-    drawScorePanel(g, 126, 410, 828, 270, data, accent);
+    drawScorePanel(g, 126, 350, 828, 230, data, accent);
 
     const qrSize = 340;
     const qrX = (w - qrSize) / 2;
-    const qrY = 760;
+    const qrY = 690;
     g.fillStyle = '#11163a';
     g.fillRect(qrX - 34, qrY - 44, qrSize + 68, qrSize + 132);
     g.strokeStyle = '#2b346b';
@@ -1087,9 +1083,6 @@
     g.font = '92px "Press Start 2P", monospace';
     g.fillStyle = '#ffdc00';
     g.fillText(`${data.playerScore} - ${data.opponentScore}`, x + w / 2, y + 112);
-
-    drawCenteredFit(g, `WINNER: ${data.winnerName.toUpperCase()}`, x + w / 2, y + 218, 700, 28, accent);
-    drawCenteredFit(g, `STAGE ${data.stage}  |  BEST ${data.best}`, x + w / 2, y + 250, 700, 20, '#8b93c9');
   }
 
   function drawPosterCrowd(g, w) {
@@ -1140,9 +1133,8 @@
     if (!shareImageBlob && lastResult) shareImageBlob = await generateShareImageBlob(lastResult);
     if (!shareImageBlob) return;
     const file = new File([shareImageBlob], 'goal2026-match-card.png', { type: 'image/png' });
-    const text = (lastResult ? lastResult.shareLine : 'GOAL 2026') + ' — scan the QR to play';
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], text, title: 'GOAL 2026' }); return; }
+      try { await navigator.share({ files: [file], title: 'GOAL 2026' }); return; }
       catch (e) { /* fall through to download */ }
     }
     downloadShareImage();
