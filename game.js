@@ -1217,6 +1217,8 @@
     canvas.addEventListener('pointerdown', press(true));
     canvas.addEventListener('pointerup', press(false));
     canvas.addEventListener('pointerleave', press(false));
+    canvas.addEventListener('pointercancel', press(false));
+    window.addEventListener('blur', () => { practiceHeld = false; });
   }
 
   // ============================== BOOT =================================
