@@ -1018,7 +1018,6 @@
   function drawSharePoster(g, w, h, data) {
     const won = data.result === 'win';
     const accent = won ? '#2ecc40' : '#ff4136';
-    const accentDark = won ? '#1a7a26' : '#8f1f1a';
 
     g.imageSmoothingEnabled = false;
     g.fillStyle = '#070b20';
@@ -1045,19 +1044,18 @@
     drawCenteredFit(g, data.shareLine.toUpperCase(), w / 2, 344, 900, 34, '#ffdc00');
 
     drawScorePanel(g, 126, 410, 828, 270, data, accent);
-    drawPosterPitch(g, 126, 700, 828, 205, data, accentDark);
 
-    const qrSize = 260;
+    const qrSize = 340;
     const qrX = (w - qrSize) / 2;
-    const qrY = 930;
+    const qrY = 760;
     g.fillStyle = '#11163a';
-    g.fillRect(qrX - 26, qrY - 26, qrSize + 52, qrSize + 88);
+    g.fillRect(qrX - 34, qrY - 44, qrSize + 68, qrSize + 132);
     g.strokeStyle = '#2b346b';
     g.lineWidth = 8;
-    g.strokeRect(qrX - 26, qrY - 26, qrSize + 52, qrSize + 88);
+    g.strokeRect(qrX - 34, qrY - 44, qrSize + 68, qrSize + 132);
     drawQr(g, data.url, qrX, qrY, qrSize);
-    drawCenteredFit(g, 'SCAN TO PLAY', w / 2, qrY + qrSize + 48, 520, 24, '#ffffff');
-    drawCenteredFit(g, data.url.replace(/^https?:\/\//, ''), w / 2, h - 60, 820, 20, '#8b93c9');
+    drawCenteredFit(g, 'SCAN TO PLAY', w / 2, qrY + qrSize + 50, 520, 28, '#ffffff');
+    drawCenteredFit(g, data.url.replace(/^https?:\/\//, ''), w / 2, h - 74, 820, 20, '#8b93c9');
   }
 
   function drawLogo(g, x, y) {
@@ -1094,41 +1092,6 @@
     drawCenteredFit(g, `STAGE ${data.stage}  |  BEST ${data.best}`, x + w / 2, y + 250, 700, 20, '#8b93c9');
   }
 
-  function drawPosterPitch(g, x, y, w, h, data, accentDark) {
-    g.fillStyle = '#0a3d12';
-    g.fillRect(x, y, w, h);
-    for (let i = 0; i < 10; i++) {
-      g.fillStyle = i % 2 ? '#0c4716' : '#0a3d12';
-      g.fillRect(x + i * (w / 10), y, w / 10, h);
-    }
-    g.strokeStyle = 'rgba(255,255,255,0.65)';
-    g.lineWidth = 6;
-    g.strokeRect(x + 32, y + 26, w - 64, h - 52);
-    g.beginPath();
-    g.moveTo(x + w / 2, y + 26);
-    g.lineTo(x + w / 2, y + h - 26);
-    g.stroke();
-    g.beginPath();
-    g.arc(x + w / 2, y + h / 2, 52, 0, Math.PI * 2);
-    g.stroke();
-
-    drawMiniPlayer(g, x + 148, y + h / 2 + 18, data.playerBands, '#1d6fd6');
-    drawMiniPlayer(g, x + w - 148, y + h / 2 + 18, data.opponentBands, data.opponentBands[1], true);
-
-    g.fillStyle = '#ffffff';
-    g.beginPath();
-    g.arc(x + w / 2, y + h / 2, 30, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = '#111111';
-    g.beginPath();
-    g.arc(x + w / 2, y + h / 2, 9, 0, Math.PI * 2);
-    g.fill();
-
-    g.fillStyle = accentDark;
-    g.fillRect(x, y, w, 12);
-    g.fillRect(x, y + h - 12, w, 12);
-  }
-
   function drawPosterCrowd(g, w) {
     const cols = ['#ffdc00', '#2ecc40', '#ff4136', '#3ba7ff', '#ffffff', '#ff851b'];
     for (let row = 0; row < 6; row++) {
@@ -1146,28 +1109,6 @@
       g.fillStyle = c;
       g.fillRect(x, y + i * h / bands.length, w, h / bands.length);
     });
-  }
-
-  function drawMiniPlayer(g, x, y, bands, jersey, flip) {
-    g.save();
-    g.translate(x, y);
-    if (flip) g.scale(-1, 1);
-    g.fillStyle = jersey;
-    g.fillRect(-36, 18, 72, 42);
-    g.fillStyle = '#e8b98c';
-    g.fillRect(-32, -46, 64, 64);
-    g.fillStyle = '#241a14';
-    g.fillRect(-32, -46, 64, 16);
-    bands.forEach((c, i) => {
-      g.fillStyle = c;
-      g.fillRect(-32 + i * (64 / 3), -30, 64 / 3, 12);
-    });
-    g.fillStyle = '#222222';
-    g.fillRect(-20, -10, 9, 9);
-    g.fillRect(12, -10, 9, 9);
-    g.fillStyle = '#5a1010';
-    g.fillRect(-16, 12, 32, 18);
-    g.restore();
   }
 
   function drawQr(g, url, x, y, size) {
