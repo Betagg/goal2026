@@ -6,18 +6,49 @@
   'use strict';
 
   // ----------------------------- data -----------------------------------
-  // Selectable nations (player identity → headband / share text).
+  const FLAGS = {
+    Argentina: { type: 'argentina', headband: ['#75AADB', '#FFFFFF', '#75AADB'] },
+    Australia: { type: 'blue-ensign', variant: 'australia', headband: ['#012169', '#FFFFFF', '#E4002B'] },
+    Belgium: { type: 'vertical', colors: ['#000000', '#FDDA24', '#EF3340'] },
+    Brazil: { type: 'brazil', headband: ['#009C3B', '#FFDF00', '#002776'] },
+    Canada: { type: 'canada', headband: ['#FF0000', '#FFFFFF', '#FF0000'] },
+    Colombia: { type: 'horizontal', colors: ['#FCD116', '#003893', '#CE1126'], ratios: [2, 1, 1] },
+    Croatia: { type: 'croatia', headband: ['#FF0000', '#FFFFFF', '#171796'] },
+    England: { type: 'england', headband: ['#FFFFFF', '#CF142B', '#FFFFFF'] },
+    France: { type: 'vertical', colors: ['#0055A4', '#FFFFFF', '#EF4135'] },
+    Germany: { type: 'horizontal', colors: ['#000000', '#DD0000', '#FFCE00'] },
+    Ghana: { type: 'ghana', headband: ['#CE1126', '#FCD116', '#006B3F'] },
+    Italy: { type: 'vertical', colors: ['#009246', '#FFFFFF', '#CE2B37'] },
+    Japan: { type: 'japan', headband: ['#FFFFFF', '#BC002D', '#FFFFFF'] },
+    Mexico: { type: 'mexico', headband: ['#006847', '#FFFFFF', '#CE1126'] },
+    Morocco: { type: 'morocco', headband: ['#C1272D', '#006233', '#C1272D'] },
+    Netherlands: { type: 'horizontal', colors: ['#AE1C28', '#FFFFFF', '#21468B'] },
+    'New Zealand': { type: 'blue-ensign', variant: 'new-zealand', headband: ['#00247D', '#FFFFFF', '#CC142B'] },
+    Poland: { type: 'horizontal', colors: ['#FFFFFF', '#DC143C'] },
+    Portugal: { type: 'portugal', headband: ['#006600', '#DA291C', '#F1BF00'] },
+    Senegal: { type: 'senegal', headband: ['#00853F', '#FDEF42', '#E31B23'] },
+    'South Korea': { type: 'south-korea', headband: ['#FFFFFF', '#CD2E3A', '#0047A0'] },
+    Spain: { type: 'horizontal', colors: ['#AA151B', '#F1BF00', '#AA151B'], ratios: [1, 2, 1] },
+    Sweden: { type: 'nordic', base: '#005293', cross: '#FECB00', headband: ['#005293', '#FECB00', '#005293'] },
+    Uruguay: { type: 'uruguay', headband: ['#FFFFFF', '#5CBFEB', '#FCD116'] },
+    USA: { type: 'usa', headband: ['#3C3B6E', '#FFFFFF', '#B22234'] },
+  };
+  const FLAG_ALIASES = {
+    'Brazil 2002': 'Brazil',
+    'Spain 2010': 'Spain',
+    'Germany 2014': 'Germany',
+    'Argentina 2022': 'Argentina',
+  };
+
+  // Selectable nations (player identity → headband / share card flag).
   const NATIONS = [
-    { id: 'ARG', name: 'Argentina', bands: ['#75AADB', '#FFFFFF', '#75AADB'] },
-    { id: 'BRA', name: 'Brazil',    bands: ['#FFDF00', '#009C3B', '#FFDF00'] },
-    { id: 'FRA', name: 'France',    bands: ['#0055A4', '#FFFFFF', '#EF4135'] },
-    { id: 'GER', name: 'Germany',   bands: ['#000000', '#DD0000', '#FFCE00'] },
-    { id: 'POR', name: 'Portugal',  bands: ['#006600', '#DA291C', '#006600'] },
-    { id: 'ESP', name: 'Spain',     bands: ['#AA151B', '#F1BF00', '#AA151B'] },
-    { id: 'JPN', name: 'Japan',     bands: ['#FFFFFF', '#BC002D', '#FFFFFF'] },
-    { id: 'USA', name: 'USA',       bands: ['#3C3B6E', '#FFFFFF', '#B22234'] },
-    { id: 'ENG', name: 'England',   bands: ['#FFFFFF', '#CF142B', '#FFFFFF'] },
-  ];
+    ['ARG', 'Argentina'], ['BRA', 'Brazil'], ['FRA', 'France'], ['GER', 'Germany'], ['POR', 'Portugal'],
+    ['ESP', 'Spain'], ['JPN', 'Japan'], ['USA', 'USA'], ['ENG', 'England'],
+  ].map(([id, name]) => ({
+    id, name,
+    bands: headbandForName(name),
+    flag: flagForName(name),
+  }));
 
   // Challenge ladder. aiBase grows with stage; jersey colours for the rival.
   const TEAMS = [
@@ -32,7 +63,7 @@
     'Argentina|#75AADB|#FFFFFF',
   ].map((s, i) => {
     const [name, c1, c2] = s.split('|');
-    return { stage: i + 1, name, c1, c2, aiBase: 0.16 + i * 0.0125 };
+    return { stage: i + 1, name, c1, c2, bands: headbandForName(name), flag: flagForName(name), aiBase: 0.16 + i * 0.0125 };
   });
 
   // Hidden bosses appear once the player clears the trigger stage.
@@ -110,17 +141,36 @@
     for (const k in screens) screens[k].classList.toggle('active', k === name);
   }
 
+  function flagKey(name) {
+    return FLAG_ALIASES[name] || String(name || '').replace(/\s+\d{4}$/, '');
+  }
+  function flagForName(name) {
+    return FLAGS[flagKey(name)] || { type: 'horizontal', colors: ['#FFFFFF', '#8b93c9', '#11163a'] };
+  }
+  function headbandForName(name) {
+    const flag = flagForName(name);
+    const colors = flag.headband || flag.colors || ['#FFFFFF', '#8b93c9', '#11163a'];
+    return [colors[0], colors[1] || colors[0], colors[2] || colors[0]];
+  }
   function nationById(id) { return NATIONS.find(n => n.id === id) || NATIONS[0]; }
 
   // Resolve which opponent the current stage faces (boss takes priority).
   function currentOpponent() {
     const boss = pendingBoss();
-    if (boss) return { name: boss.name, c1: boss.c1, c2: boss.c2, aiBase: boss.aiBase, boss };
+    if (boss) return {
+      name: boss.name,
+      c1: boss.c1,
+      c2: boss.c2,
+      bands: headbandForName(boss.name),
+      flag: flagForName(boss.name),
+      aiBase: boss.aiBase,
+      boss,
+    };
     const idx = Math.min(save.stage - 1, TEAMS.length - 1);
     const t = TEAMS[idx];
     // beyond the authored ladder, keep ramping difficulty
     const aiBase = save.stage <= TEAMS.length ? t.aiBase : t.aiBase + (save.stage - TEAMS.length) * 0.02;
-    return { name: t.name, c1: t.c1, c2: t.c2, aiBase, boss: null };
+    return { name: t.name, c1: t.c1, c2: t.c2, bands: t.bands, flag: t.flag, aiBase, boss: null };
   }
 
   // A boss is "pending" if its trigger stage was just cleared but not yet beaten.
@@ -140,7 +190,7 @@
       btn.className = 'nation-btn' + (save.nation === n.id ? ' selected' : '');
       const chip = document.createElement('div');
       chip.className = 'flag-chip';
-      n.bands.forEach(c => { const i = document.createElement('i'); i.style.background = c; chip.appendChild(i); });
+      renderFlagElement(chip, n.flag);
       const label = document.createElement('span');
       label.textContent = n.name;
       btn.appendChild(chip); btn.appendChild(label);
@@ -158,8 +208,7 @@
   function renderHome() {
     const n = nationById(save.nation);
     const flag = $('home-flag');
-    flag.innerHTML = '';
-    n.bands.forEach(c => { const i = document.createElement('i'); i.style.background = c; flag.appendChild(i); });
+    renderFlagElement(flag, n.flag);
     $('home-nation-name').textContent = n.name;
     $('home-stage').textContent = save.stage;
     $('home-best').textContent = save.best;
@@ -586,8 +635,7 @@
   }
   function drawOpponent() {
     const m = match;
-    const bands = [m.opp.c1, m.opp.c2, m.opp.c1];
-    drawHead(W - 60, H * 0.5, bands, m.opp.c2, m.oppMouth, true);
+    drawHead(W - 60, H * 0.5, m.opp.bands, m.opp.c2, m.oppMouth, true);
     if (m.oppMouth > 0.55 && !m.over) {
       ctx.fillStyle = '#ff6b6b';
       ctx.font = '8px "Press Start 2P", monospace';
@@ -959,15 +1007,14 @@
     const playerWon = m.result === 'win';
     const playerScore = playerWon ? 1 : 0;
     const opponentScore = playerWon ? 0 : 1;
-    const opponentBands = [m.opp.c1, m.opp.c2, m.opp.c1];
     return {
       result: m.result,
       stage: m.stage,
       best: save.best,
       playerName: m.playerNation.name,
       opponentName: m.opp.name,
-      playerBands: m.playerNation.bands,
-      opponentBands,
+      playerFlag: m.playerNation.flag,
+      opponentFlag: m.opp.flag,
       playerScore,
       opponentScore,
       url: getShareUrl(),
@@ -1084,8 +1131,8 @@
     g.lineWidth = 8;
     g.strokeRect(x, y, w, h);
 
-    drawFlag(g, x + 54, y + 44, 126, 82, data.playerBands);
-    drawFlag(g, x + w - 180, y + 44, 126, 82, data.opponentBands);
+    drawFlag(g, x + 54, y + 44, 126, 82, data.playerFlag);
+    drawFlag(g, x + w - 180, y + 44, 126, 82, data.opponentFlag);
     drawCenteredFit(g, short(data.playerName).toUpperCase(), x + 117, y + 164, 260, 28, '#ffffff');
     drawCenteredFit(g, short(data.opponentName).toUpperCase(), x + w - 117, y + 164, 260, 28, '#ffffff');
 
@@ -1106,13 +1153,253 @@
     }
   }
 
-  function drawFlag(g, x, y, w, h, bands) {
+  function renderFlagElement(el, flag) {
+    el.innerHTML = '';
+    const c = document.createElement('canvas');
+    c.width = 68;
+    c.height = 44;
+    c.className = 'flag-canvas';
+    el.appendChild(c);
+    const flagCtx = c.getContext('2d');
+    flagCtx.imageSmoothingEnabled = false;
+    drawFlagDesign(flagCtx, flag, 0, 0, c.width, c.height);
+  }
+
+  function drawFlag(g, x, y, w, h, flag) {
     g.fillStyle = '#05071a';
     g.fillRect(x - 6, y - 6, w + 12, h + 12);
-    bands.forEach((c, i) => {
-      g.fillStyle = c;
-      g.fillRect(x, y + i * h / bands.length, w, h / bands.length);
+    drawFlagDesign(g, flag, x, y, w, h);
+  }
+
+  function drawFlagDesign(g, flag, x, y, w, h) {
+    const spec = flag || {};
+    g.save();
+    g.beginPath();
+    g.rect(x, y, w, h);
+    g.clip();
+
+    if (spec.type === 'horizontal') drawHorizontalFlag(g, x, y, w, h, spec.colors, spec.ratios);
+    else if (spec.type === 'vertical') drawVerticalFlag(g, x, y, w, h, spec.colors, spec.ratios);
+    else if (spec.type === 'argentina') {
+      drawHorizontalFlag(g, x, y, w, h, ['#75AADB', '#FFFFFF', '#75AADB']);
+      drawSun(g, x + w * 0.5, y + h * 0.5, h * 0.11, '#F6B40E');
+    } else if (spec.type === 'brazil') {
+      fill(g, x, y, w, h, '#009C3B');
+      drawDiamond(g, x + w * 0.5, y + h * 0.5, w * 0.74, h * 0.72, '#FFDF00');
+      drawCircle(g, x + w * 0.5, y + h * 0.5, h * 0.22, '#002776');
+    } else if (spec.type === 'japan') {
+      fill(g, x, y, w, h, '#FFFFFF');
+      drawCircle(g, x + w * 0.5, y + h * 0.5, h * 0.26, '#BC002D');
+    } else if (spec.type === 'england') {
+      fill(g, x, y, w, h, '#FFFFFF');
+      fill(g, x + w * 0.43, y, w * 0.14, h, '#CF142B');
+      fill(g, x, y + h * 0.42, w, h * 0.16, '#CF142B');
+    } else if (spec.type === 'usa') {
+      for (let i = 0; i < 13; i++) fill(g, x, y + i * h / 13, w, h / 13, i % 2 ? '#FFFFFF' : '#B22234');
+      fill(g, x, y, w * 0.45, h * 7 / 13, '#3C3B6E');
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
+        drawStar(g, x + w * (0.055 + c * 0.08), y + h * (0.07 + r * 0.09), h * 0.018, h * 0.008, '#FFFFFF');
+      }
+    } else if (spec.type === 'canada') {
+      drawVerticalFlag(g, x, y, w, h, ['#FF0000', '#FFFFFF', '#FF0000'], [1, 2, 1]);
+      drawMapleLeaf(g, x + w * 0.5, y + h * 0.5, h * 0.27, '#FF0000');
+    } else if (spec.type === 'portugal') {
+      fill(g, x, y, w * 0.4, h, '#006600');
+      fill(g, x + w * 0.4, y, w * 0.6, h, '#DA291C');
+      drawCircle(g, x + w * 0.4, y + h * 0.5, h * 0.15, '#F1BF00');
+      drawCircle(g, x + w * 0.4, y + h * 0.5, h * 0.09, '#DA291C');
+    } else if (spec.type === 'mexico') {
+      drawVerticalFlag(g, x, y, w, h, ['#006847', '#FFFFFF', '#CE1126']);
+      drawCircle(g, x + w * 0.5, y + h * 0.5, h * 0.09, '#B38B00');
+      drawCircle(g, x + w * 0.5, y + h * 0.5, h * 0.045, '#006847');
+    } else if (spec.type === 'south-korea') {
+      fill(g, x, y, w, h, '#FFFFFF');
+      drawTaegeuk(g, x + w * 0.5, y + h * 0.5, h * 0.22);
+      drawTrigrams(g, x, y, w, h);
+    } else if (spec.type === 'nordic') {
+      fill(g, x, y, w, h, spec.base);
+      fill(g, x + w * 0.29, y, w * 0.13, h, spec.cross);
+      fill(g, x, y + h * 0.41, w, h * 0.18, spec.cross);
+    } else if (spec.type === 'blue-ensign') {
+      fill(g, x, y, w, h, '#00247D');
+      drawUnionJack(g, x, y, w * 0.48, h * 0.52);
+      if (spec.variant === 'new-zealand') {
+        drawStar(g, x + w * 0.69, y + h * 0.27, h * 0.09, h * 0.04, '#FFFFFF');
+        drawStar(g, x + w * 0.69, y + h * 0.27, h * 0.06, h * 0.025, '#CC142B');
+        drawStar(g, x + w * 0.82, y + h * 0.43, h * 0.08, h * 0.035, '#FFFFFF');
+        drawStar(g, x + w * 0.82, y + h * 0.43, h * 0.055, h * 0.022, '#CC142B');
+        drawStar(g, x + w * 0.66, y + h * 0.62, h * 0.08, h * 0.035, '#FFFFFF');
+        drawStar(g, x + w * 0.66, y + h * 0.62, h * 0.055, h * 0.022, '#CC142B');
+        drawStar(g, x + w * 0.84, y + h * 0.76, h * 0.07, h * 0.03, '#FFFFFF');
+        drawStar(g, x + w * 0.84, y + h * 0.76, h * 0.048, h * 0.02, '#CC142B');
+      } else {
+        drawStar(g, x + w * 0.26, y + h * 0.74, h * 0.10, h * 0.045, '#FFFFFF');
+        drawStar(g, x + w * 0.70, y + h * 0.28, h * 0.075, h * 0.035, '#FFFFFF');
+        drawStar(g, x + w * 0.82, y + h * 0.43, h * 0.06, h * 0.028, '#FFFFFF');
+        drawStar(g, x + w * 0.68, y + h * 0.62, h * 0.06, h * 0.028, '#FFFFFF');
+        drawStar(g, x + w * 0.84, y + h * 0.76, h * 0.055, h * 0.025, '#FFFFFF');
+      }
+    } else if (spec.type === 'croatia') {
+      drawHorizontalFlag(g, x, y, w, h, ['#FF0000', '#FFFFFF', '#171796']);
+      drawCheckerShield(g, x + w * 0.5, y + h * 0.5, h * 0.26);
+    } else if (spec.type === 'uruguay') {
+      for (let i = 0; i < 9; i++) fill(g, x, y + i * h / 9, w, h / 9, i % 2 ? '#5CBFEB' : '#FFFFFF');
+      fill(g, x, y, w * 0.36, h * 5 / 9, '#FFFFFF');
+      drawSun(g, x + w * 0.18, y + h * 0.27, h * 0.08, '#FCD116');
+    } else if (spec.type === 'morocco') {
+      fill(g, x, y, w, h, '#C1272D');
+      drawStar(g, x + w * 0.5, y + h * 0.5, h * 0.18, h * 0.075, '#006233');
+    } else if (spec.type === 'senegal') {
+      drawVerticalFlag(g, x, y, w, h, ['#00853F', '#FDEF42', '#E31B23']);
+      drawStar(g, x + w * 0.5, y + h * 0.5, h * 0.13, h * 0.055, '#00853F');
+    } else if (spec.type === 'ghana') {
+      drawHorizontalFlag(g, x, y, w, h, ['#CE1126', '#FCD116', '#006B3F']);
+      drawStar(g, x + w * 0.5, y + h * 0.5, h * 0.13, h * 0.055, '#111111');
+    } else {
+      drawHorizontalFlag(g, x, y, w, h, ['#FFFFFF', '#8b93c9', '#11163a']);
+    }
+    g.restore();
+  }
+
+  function fill(g, x, y, w, h, color) {
+    g.fillStyle = color;
+    g.fillRect(x, y, w, h);
+  }
+  function drawHorizontalFlag(g, x, y, w, h, colors, ratios) {
+    const rs = ratios || colors.map(() => 1);
+    const total = rs.reduce((a, b) => a + b, 0);
+    let yy = y;
+    colors.forEach((color, i) => {
+      const hh = h * rs[i] / total;
+      fill(g, x, yy, w, hh, color);
+      yy += hh;
     });
+  }
+  function drawVerticalFlag(g, x, y, w, h, colors, ratios) {
+    const rs = ratios || colors.map(() => 1);
+    const total = rs.reduce((a, b) => a + b, 0);
+    let xx = x;
+    colors.forEach((color, i) => {
+      const ww = w * rs[i] / total;
+      fill(g, xx, y, ww, h, color);
+      xx += ww;
+    });
+  }
+  function drawCircle(g, cx, cy, r, color) {
+    g.fillStyle = color;
+    g.beginPath();
+    g.arc(cx, cy, r, 0, Math.PI * 2);
+    g.fill();
+  }
+  function drawDiamond(g, cx, cy, w, h, color) {
+    g.fillStyle = color;
+    g.beginPath();
+    g.moveTo(cx, cy - h / 2);
+    g.lineTo(cx + w / 2, cy);
+    g.lineTo(cx, cy + h / 2);
+    g.lineTo(cx - w / 2, cy);
+    g.closePath();
+    g.fill();
+  }
+  function drawStar(g, cx, cy, outer, inner, color, points = 5) {
+    g.fillStyle = color;
+    g.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const r = i % 2 ? inner : outer;
+      const a = -Math.PI / 2 + i * Math.PI / points;
+      const px = cx + Math.cos(a) * r;
+      const py = cy + Math.sin(a) * r;
+      if (i) g.lineTo(px, py); else g.moveTo(px, py);
+    }
+    g.closePath();
+    g.fill();
+  }
+  function drawSun(g, cx, cy, r, color) {
+    for (let i = 0; i < 12; i++) {
+      const a = i * Math.PI / 6;
+      g.strokeStyle = color;
+      g.lineWidth = Math.max(1, r * 0.18);
+      g.beginPath();
+      g.moveTo(cx + Math.cos(a) * r * 1.2, cy + Math.sin(a) * r * 1.2);
+      g.lineTo(cx + Math.cos(a) * r * 1.8, cy + Math.sin(a) * r * 1.8);
+      g.stroke();
+    }
+    drawCircle(g, cx, cy, r, color);
+  }
+  function drawUnionJack(g, x, y, w, h) {
+    fill(g, x, y, w, h, '#012169');
+    drawDiagonalBand(g, x, y, w, h, '#FFFFFF', h * 0.22, 1);
+    drawDiagonalBand(g, x, y, w, h, '#FFFFFF', h * 0.22, -1);
+    drawDiagonalBand(g, x, y, w, h, '#C8102E', h * 0.10, 1);
+    drawDiagonalBand(g, x, y, w, h, '#C8102E', h * 0.10, -1);
+    fill(g, x + w * 0.42, y, w * 0.16, h, '#FFFFFF');
+    fill(g, x, y + h * 0.38, w, h * 0.24, '#FFFFFF');
+    fill(g, x + w * 0.46, y, w * 0.08, h, '#C8102E');
+    fill(g, x, y + h * 0.44, w, h * 0.12, '#C8102E');
+  }
+  function drawDiagonalBand(g, x, y, w, h, color, thick, dir) {
+    g.save();
+    g.beginPath();
+    g.rect(x, y, w, h);
+    g.clip();
+    g.translate(x + w / 2, y + h / 2);
+    g.rotate(dir * Math.atan2(h, w));
+    fill(g, -Math.hypot(w, h) / 2, -thick / 2, Math.hypot(w, h), thick, color);
+    g.restore();
+  }
+  function drawTaegeuk(g, cx, cy, r) {
+    g.fillStyle = '#CD2E3A';
+    g.beginPath();
+    g.arc(cx, cy, r, Math.PI, 0);
+    g.arc(cx + r / 2, cy, r / 2, 0, Math.PI);
+    g.arc(cx - r / 2, cy, r / 2, 0, Math.PI, true);
+    g.fill();
+    g.fillStyle = '#0047A0';
+    g.beginPath();
+    g.arc(cx, cy, r, 0, Math.PI);
+    g.arc(cx - r / 2, cy, r / 2, Math.PI, 0);
+    g.arc(cx + r / 2, cy, r / 2, Math.PI, 0, true);
+    g.fill();
+  }
+  function drawTrigrams(g, x, y, w, h) {
+    g.fillStyle = '#111111';
+    const bar = (cx, cy, rot) => {
+      g.save();
+      g.translate(cx, cy);
+      g.rotate(rot);
+      for (let i = -1; i <= 1; i++) g.fillRect(-w * 0.055, i * h * 0.04, w * 0.11, h * 0.014);
+      g.restore();
+    };
+    bar(x + w * 0.25, y + h * 0.24, -0.7);
+    bar(x + w * 0.75, y + h * 0.24, 0.7);
+    bar(x + w * 0.25, y + h * 0.76, 0.7);
+    bar(x + w * 0.75, y + h * 0.76, -0.7);
+  }
+  function drawCheckerShield(g, cx, cy, size) {
+    const cell = size / 5;
+    fill(g, cx - size / 2 - cell * 0.15, cy - size / 2 - cell * 0.15, size + cell * 0.3, size + cell * 0.3, '#FFFFFF');
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 5; c++) {
+        fill(g, cx - size / 2 + c * cell, cy - size / 2 + r * cell, cell, cell, (r + c) % 2 ? '#FFFFFF' : '#FF0000');
+      }
+    }
+  }
+  function drawMapleLeaf(g, cx, cy, r, color) {
+    g.fillStyle = color;
+    g.beginPath();
+    const pts = [
+      [0, -1], [0.16, -0.48], [0.48, -0.65], [0.34, -0.26], [0.72, -0.22],
+      [0.38, 0.02], [0.55, 0.44], [0.16, 0.32], [0.10, 0.78], [-0.10, 0.78],
+      [-0.16, 0.32], [-0.55, 0.44], [-0.38, 0.02], [-0.72, -0.22], [-0.34, -0.26],
+      [-0.48, -0.65], [-0.16, -0.48],
+    ];
+    pts.forEach(([px, py], i) => {
+      const xx = cx + px * r;
+      const yy = cy + py * r;
+      if (i) g.lineTo(xx, yy); else g.moveTo(xx, yy);
+    });
+    g.closePath();
+    g.fill();
   }
 
   function drawQr(g, url, x, y, size) {

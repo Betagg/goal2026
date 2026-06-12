@@ -126,11 +126,16 @@ html, body {
   width: 34px;
   height: 22px;
   border: 2px solid var(--shadow);
-  display: flex;
-  flex-direction: column;
+  display: block;
   overflow: hidden;
+  background: #fff;
 }
 .flag-chip i { flex: 1; display: block; }
+.flag-chip canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 /* ---------- home ---------- */
 .home-nation {
