@@ -37,11 +37,12 @@
 
   // Hidden bosses appear once the player clears the trigger stage.
   const BOSSES = [
-    { afterStage: 5,  key: 'BRA2002', name: 'Brazil 2002',    theme: 'R-R-R', c1: '#FFDF00', c2: '#009C3B', aiBase: 0.40 },
-    { afterStage: 10, key: 'ESP2010', name: 'Spain 2010',     theme: 'Tiki-Taka', c1: '#AA151B', c2: '#F1BF00', aiBase: 0.52 },
-    { afterStage: 15, key: 'GER2014', name: 'Germany 2014',   theme: 'Die Mannschaft', c1: '#1a1a1a', c2: '#DD0000', aiBase: 0.64 },
-    { afterStage: 25, key: 'ARG2022', name: 'Argentina 2022', theme: 'La Scaloneta', c1: '#75AADB', c2: '#FFFFFF', aiBase: 0.78 },
+    { afterStage: 5,  key: 'BRA2002', name: 'Brazil 2002',    theme: 'R-R-R', c1: '#FFDF00', c2: '#009C3B', aiBase: 0.32 },
+    { afterStage: 10, key: 'ESP2010', name: 'Spain 2010',     theme: 'Tiki-Taka', c1: '#AA151B', c2: '#F1BF00', aiBase: 0.42 },
+    { afterStage: 15, key: 'GER2014', name: 'Germany 2014',   theme: 'Die Mannschaft', c1: '#1a1a1a', c2: '#DD0000', aiBase: 0.54 },
+    { afterStage: 25, key: 'ARG2022', name: 'Argentina 2022', theme: 'La Scaloneta', c1: '#75AADB', c2: '#FFFFFF', aiBase: 0.70 },
   ];
+  const OPENING_ASSIST_END_STAGE = 8;
 
   const MATCH_SECONDS = 15;
   const SAVE_KEY = 'goal2026.save.v1';
@@ -209,7 +210,7 @@
 
   // -------------------- microphone / input intensity ---------------------
   function openingAssist(stage) {
-    return clamp((4 - stage) / 3, 0, 1);
+    return clamp((OPENING_ASSIST_END_STAGE - stage) / (OPENING_ASSIST_END_STAGE - 1), 0, 1);
   }
 
   // Returns 0..1 "shout intensity" for this frame.
