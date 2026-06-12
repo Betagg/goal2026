@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GOAL 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ============ NATION SELECT ============ -->
+    <section id="screen-nation" class="screen active">
+      <div class="panel">
+        <h1 class="logo">GOAL <span>2026</span></h1>
+        <h2 class="screen-title">Choose Your Nation</h2>
+        <div id="nation-grid" class="nation-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ HOME ============ -->
+    <section id="screen-home" class="screen">
+      <div class="panel">
+        <h1 class="logo">GOAL <span>2026</span></h1>
+        <div class="home-nation">
+          <div id="home-flag" class="flag-chip"></div>
+          <span id="home-nation-name">—</span>
+        </div>
+        <div class="home-stats">
+          <div class="stat">
+            <div class="stat-label">Stage</div>
+            <div id="home-stage" class="stat-value">1</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Best Streak</div>
+            <div id="home-best" class="stat-value">0</div>
+          </div>
+        </div>
+        <div id="home-next" class="home-next"></div>
+        <button id="btn-play" class="btn btn-primary">PLAY</button>
+        <button id="btn-change-nation" class="btn btn-ghost">Change Nation</button>
+      </div>
+    </section>
+
+    <!-- ============ PERMISSION ============ -->
+    <section id="screen-permission" class="screen">
+      <div class="panel">
+        <h2 class="screen-title">Mic + Camera</h2>
+        <p class="perm-copy">
+          Your <strong>voice</strong> pushes the ball. Shout louder &amp; longer to score.<br/>
+          Your <strong>camera</strong> shows up in the shareable replay.
+        </p>
+        <div id="perm-status" class="perm-status"></div>
+        <button id="btn-start-match" class="btn btn-primary">Start Match</button>
+        <button id="btn-practice" class="btn btn-ghost">Practice Without Mic</button>
+        <button id="btn-perm-back" class="btn btn-link">Back</button>
+      </div>
+    </section>
+
+    <!-- ============ MATCH ============ -->
+    <section id="screen-match" class="screen">
+      <div class="match-wrap">
+        <canvas id="game-canvas" width="640" height="360"></canvas>
+        <button id="btn-exit" class="btn-exit">Exit</button>
+        <div id="practice-hint" class="practice-hint">Hold SPACE or press the field to shout!</div>
+      </div>
+    </section>
+
+    <!-- ============ RESULT ============ -->
+    <section id="screen-result" class="screen">
+      <div class="panel">
+        <h2 id="result-title" class="result-title">YOU WIN</h2>
+        <div id="result-share-text" class="share-text">I Beat Brazil</div>
+        <video id="replay-video" class="replay" playsinline controls loop muted></video>
+        <div class="result-actions">
+          <button id="btn-next" class="btn btn-primary">Next Match</button>
+          <button id="btn-retry" class="btn btn-ghost">Retry</button>
+        </div>
+        <div class="result-actions">
+          <button id="btn-share" class="btn btn-ghost">Share Card</button>
+          <button id="btn-download" class="btn btn-ghost">Download</button>
+        </div>
+        <button id="btn-home" class="btn btn-link">Back to Home</button>
+      </div>
+    </section>
+
+    <!-- ============ SHARE CARD ============ -->
+    <div id="share-modal" class="share-modal" aria-hidden="true">
+      <div class="share-card-panel" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+        <button id="btn-close-share" class="share-close" aria-label="Close share card">×</button>
+        <h2 id="share-modal-title" class="share-modal-title">MATCH CARD</h2>
+        <img id="share-image-preview" class="share-image-preview" alt="GOAL 2026 match share card" />
+        <div class="result-actions">
+          <button id="btn-share-image" class="btn btn-primary">Share Image</button>
+          <button id="btn-save-share-image" class="btn btn-ghost">Save PNG</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- hidden camera feed source -->
+  <video id="camera-feed" autoplay playsinline muted style="display:none"></video>
+
+  <script src="qr.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
