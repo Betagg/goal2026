@@ -389,10 +389,10 @@
     if (raw > 0.3 && Math.random() < raw * m.multiplier * 0.12) spawnGoalParticle();
     updateParticles(dt);
 
-    // --- win / lose checks ---
-    if (m.ballX >= 0.985) endMatch('win', 'right');
-    else if (m.ballX <= 0.015) endMatch('lose', 'left');
-    else if (m.timeLeft <= 0) endMatch(m.ballX > 0.5 ? 'win' : 'lose', null);
+    // --- win / lose checks: only a ball visibly inside the goal counts ---
+    if (ballHasEnteredGoal(m, 'right')) endMatch('win', 'right');
+    else if (ballHasEnteredGoal(m, 'left')) endMatch('lose', 'left');
+    else if (m.timeLeft <= 0) endMatch('lose', null);
   }
 
   function endMatch(result, side) {
@@ -400,9 +400,9 @@
     m.over = true;
     m.result = result;
     m.goalSide = side;
-    m.goalFlash = 1;
+    m.goalFlash = side ? 1 : 0;
     m.celebrate = 2.2;
-    m.screenShake = 14;
+    m.screenShake = side ? 14 : 6;
     if (side) burstConfetti();
     stopAmbientCrowd(0.3);
     playResultSound(result);
@@ -435,7 +435,7 @@
   // --------------------------- particles ---------------------------------
   function spawnGoalParticle() {
     const m = match;
-    const bx = fieldX(m.ballX), by = H * 0.55;
+    const bx = fieldX(m.ballX), by = BALL_Y;
     m.particles.push({
       x: 80 + Math.random() * 30, y: H * 0.5 + (Math.random() - 0.5) * 40,
       tx: bx, ty: by, life: 0, dur: 0.5 + Math.random() * 0.3,
@@ -476,7 +476,26 @@
   }
 
   // ============================= RENDER =================================
-  const fieldX = (bx) => 90 + bx * (W - 180);   // ball x mapped to pitch
+  const GOAL_W = 26;
+  const GOAL_TOP = 130;
+  const GOAL_H = 110;
+  const LEFT_GOAL_X = 70 - GOAL_W;
+  const RIGHT_GOAL_X = W - 70;
+  const BALL_R = 10;
+  const BALL_Y = H * 0.55;
+  const BALL_MIN_X = LEFT_GOAL_X + GOAL_W * 0.5;
+  const BALL_MAX_X = RIGHT_GOAL_X + GOAL_W * 0.5;
+  const GOAL_SCORE_DEPTH = GOAL_W * 0.35;
+  const fieldX = (bx) => BALL_MIN_X + bx * (BALL_MAX_X - BALL_MIN_X);   // ball x mapped into the goals
+
+  function ballHasEnteredGoal(m, side) {
+    const x = fieldX(m.ballX);
+    const y = BALL_Y;
+    const insideY = y >= GOAL_TOP + BALL_R * 0.5 && y <= GOAL_TOP + GOAL_H - BALL_R * 0.5;
+    if (!insideY) return false;
+    if (side === 'right') return x >= RIGHT_GOAL_X + GOAL_SCORE_DEPTH;
+    return x <= LEFT_GOAL_X + GOAL_W - GOAL_SCORE_DEPTH;
+  }
 
   function render() {
     const m = match;
@@ -537,7 +556,7 @@
     drawGoal(W - 70, false);            // right = opponent's goal
   }
   function drawGoal(cx, left) {
-    const top = 130, h = 110, w = 26;
+    const top = GOAL_TOP, h = GOAL_H, w = GOAL_W;
     const x = left ? cx - w : cx;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
@@ -553,7 +572,7 @@
 
   function drawBall() {
     const m = match;
-    const x = fieldX(m.ballX), y = H * 0.55;
+    const x = fieldX(m.ballX), y = BALL_Y;
     // trail when moving fast
     const speed = Math.abs(m.smoothInt) + m.burst;
     if (speed > 0.4) {
@@ -565,7 +584,7 @@
     ctx.save();
     ctx.translate(x, y); ctx.rotate(m.ballSpin);
     ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, BALL_R, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#111';
     ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill();
     for (let a = 0; a < 5; a++) {
