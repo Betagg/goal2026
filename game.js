@@ -510,6 +510,7 @@
     drawOpponent();
     drawParticles();
     drawBall();
+    drawCheerleaders();
     drawConfetti();
     ctx.restore();           // shake off for HUD
     drawHUD();
@@ -611,6 +612,89 @@
   function drawConfetti() {
     const m = match;
     for (const c of m.confetti) { ctx.fillStyle = c.c; ctx.fillRect(c.x, c.y, c.r, c.r); }
+  }
+
+  function drawCheerleaders() {
+    const m = match;
+    if (!m.over || m.result !== 'win') return;
+    const colors = m.playerNation.bands;
+    const baseX = 178;
+    const groundY = H - 25;
+    for (let i = 0; i < 5; i++) {
+      const phase = Math.sin(m.crowdPhase * 3.2 + i * 0.9);
+      const x = baseX + i * 54;
+      const y = groundY + (phase > 0 ? -2 : 1);
+      drawCheerleader(x, y, phase, colors, i);
+    }
+  }
+
+  function drawCheerleader(cx, groundY, phase, teamColors, index) {
+    const upLeft = phase > 0;
+    const skin = '#e8b98c';
+    const hair = ['#241a14', '#111111', '#6b3518', '#3b2316', '#7a4b22'][index % 5];
+    const top = teamColors[index % teamColors.length] || '#ffdc00';
+    const skirt = teamColors[(index + 1) % teamColors.length] || '#3ba7ff';
+    const pomA = index % 2 ? '#ffdc00' : '#ffffff';
+    const pomB = index % 2 ? '#3ba7ff' : '#ff4136';
+    const bodyY = groundY - 22;
+    const leftPom = { x: cx - 13, y: groundY - (upLeft ? 34 : 23) };
+    const rightPom = { x: cx + 13, y: groundY - (upLeft ? 23 : 34) };
+
+    // shadow
+    ctx.fillStyle = 'rgba(5,7,26,0.38)';
+    ctx.fillRect(cx - 13, groundY + 1, 26, 3);
+
+    // arms
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - 4, bodyY + 4);
+    ctx.lineTo(leftPom.x, leftPom.y + 3);
+    ctx.moveTo(cx + 4, bodyY + 4);
+    ctx.lineTo(rightPom.x, rightPom.y + 3);
+    ctx.stroke();
+
+    drawPom(leftPom.x, leftPom.y, pomA);
+    drawPom(rightPom.x, rightPom.y, pomB);
+
+    // legs
+    ctx.fillStyle = skin;
+    const kick = phase > 0 ? 1 : -1;
+    ctx.fillRect(cx - 5, groundY - 9, 4, 9);
+    ctx.fillRect(cx + 2 + kick, groundY - 9, 4, 9);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - 7, groundY - 1, 7, 3);
+    ctx.fillRect(cx + kick, groundY - 1, 8, 3);
+
+    // uniform
+    ctx.fillStyle = top;
+    ctx.fillRect(cx - 7, bodyY, 14, 10);
+    ctx.fillStyle = skirt;
+    ctx.fillRect(cx - 10, bodyY + 9, 20, 6);
+    ctx.fillStyle = '#05071a';
+    ctx.fillRect(cx - 1, bodyY + 1, 2, 8);
+
+    // head and hair
+    ctx.fillStyle = hair;
+    ctx.fillRect(cx - 7, bodyY - 13, 14, 9);
+    ctx.fillRect(cx - 9, bodyY - 9, 4, 10);
+    ctx.fillRect(cx + 5, bodyY - 9, 4, 10);
+    ctx.fillStyle = skin;
+    ctx.fillRect(cx - 6, bodyY - 10, 12, 10);
+    ctx.fillStyle = hair;
+    ctx.fillRect(cx - 6, bodyY - 12, 12, 4);
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(cx - 3, bodyY - 6, 2, 2);
+    ctx.fillRect(cx + 3, bodyY - 6, 2, 2);
+    ctx.fillStyle = '#5a1010';
+    ctx.fillRect(cx - 2, bodyY - 2, 4, 2);
+  }
+
+  function drawPom(cx, cy, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(cx - 5, cy, 10, 4);
+    ctx.fillRect(cx - 3, cy - 3, 6, 10);
+    ctx.fillRect(cx - 7, cy + 3, 14, 3);
   }
 
   // pixel avatar with national headband + animated mouth
