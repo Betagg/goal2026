@@ -80,7 +80,7 @@
   const SFX = {
     kickoff: 'assets/sfx/referee-whistle.wav',
     ambient: 'assets/sfx/stadium-joy-shouting-crowd.mp3',
-    win: 'assets/sfx/huge-crowd-cheering-victory.mp3',
+    win: 'assets/sfx/argentina-fans-victory.mp3',
     lose: 'assets/sfx/people-moaning-sadly.mp3',
   };
 
