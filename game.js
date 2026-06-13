@@ -294,7 +294,7 @@
       ballSpin: 0,
       timeLeft: MATCH_SECONDS,
       over: false,
-      result: null,          // 'win' | 'lose'
+      result: null,          // 'win' | 'lose' | 'draw'
       intensity: 0,
       smoothInt: 0,
       power: 0,
@@ -392,7 +392,7 @@
     // --- win / lose checks: only a ball visibly inside the goal counts ---
     if (ballHasEnteredGoal(m, 'right')) endMatch('win', 'right');
     else if (ballHasEnteredGoal(m, 'left')) endMatch('lose', 'left');
-    else if (m.timeLeft <= 0) endMatch('lose', null);
+    else if (m.timeLeft <= 0) endMatch('draw', null);
   }
 
   function endMatch(result, side) {
@@ -416,8 +416,8 @@
     }
     persist();
 
-    // let the goal scene play, then finalize the replay and show result
-    setTimeout(finishToResult, 2300);
+    // goal scenes get a celebration beat; no-goal results should resolve faster.
+    setTimeout(finishToResult, side ? 2300 : 1100);
   }
 
   function updateGoalScene(dt) {
@@ -850,6 +850,10 @@
   }
 
   function playResultSound(result) {
+    if (result === 'draw') {
+      playSyntheticResultSound('draw');
+      return;
+    }
     const name = result === 'win' ? 'win' : 'lose';
     const volume = result === 'win' ? 0.9 : 0.78;
     const maxDuration = result === 'win' ? 7.0 : 5.0;
@@ -880,27 +884,28 @@
     if (ctxA.state === 'suspended') ctxA.resume();
 
     const win = result === 'win';
+    const draw = result === 'draw';
     const now = ctxA.currentTime;
     const master = ctxA.createGain();
     master.gain.value = 0.0001;
     master.connect(ctxA.destination);
-    master.gain.exponentialRampToValueAtTime(win ? 0.55 : 0.34, now + 0.08);
-    master.gain.exponentialRampToValueAtTime(0.0001, now + (win ? 2.35 : 1.9));
+    master.gain.exponentialRampToValueAtTime(win ? 0.55 : draw ? 0.22 : 0.34, now + 0.08);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + (win ? 2.35 : draw ? 1.35 : 1.9));
 
     // crowd noise (filtered white noise)
-    const dur = win ? 2.3 : 1.8;
+    const dur = win ? 2.3 : draw ? 1.3 : 1.8;
     const buf = ctxA.createBuffer(1, ctxA.sampleRate * dur, ctxA.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) {
       const k = i / d.length;
-      const shape = win ? Math.sin(Math.PI * k) : Math.pow(1 - k, 0.55);
-      d[i] = (Math.random() * 2 - 1) * (win ? 0.62 : 0.48) * shape;
+      const shape = win ? Math.sin(Math.PI * k) : draw ? Math.sin(Math.PI * k) * 0.5 : Math.pow(1 - k, 0.55);
+      d[i] = (Math.random() * 2 - 1) * (win ? 0.62 : draw ? 0.22 : 0.48) * shape;
     }
     const noise = ctxA.createBufferSource(); noise.buffer = buf;
     const bp = ctxA.createBiquadFilter();
     bp.type = 'bandpass';
-    bp.frequency.value = win ? 1050 : 360;
-    bp.Q.value = win ? 0.7 : 1.1;
+    bp.frequency.value = win ? 1050 : draw ? 520 : 360;
+    bp.Q.value = win ? 0.7 : draw ? 0.85 : 1.1;
     noise.connect(bp); bp.connect(master); noise.start(now);
 
     if (win) {
@@ -925,6 +930,11 @@
         const cg = ctxA.createGain(); cg.gain.value = 0.25;
         cb.connect(cg); cg.connect(ctxA.destination); cb.start(t);
       }
+    } else if (draw) {
+      // neutral full-time whistle pair
+      [740, 740].forEach((freq, i) => {
+        playTone(ctxA, now + 0.1 + i * 0.34, freq, 0.16, 'square', 0.08, master);
+      });
     } else {
       // descending "aww" tones for a conceded goal
       [196, 164.81, 130.81].forEach((freq, i) => {
@@ -996,8 +1006,8 @@
     const m = match;
     lastResult = buildResultData(m);
     const title = $('result-title');
-    title.textContent = m.result === 'win' ? 'YOU WIN' : 'YOU LOSE';
-    title.className = 'result-title ' + (m.result === 'win' ? 'win' : 'lose');
+    title.textContent = resultLabel(m.result);
+    title.className = 'result-title ' + m.result;
 
     const vid = $('replay-video');
     if (replayUrl) { vid.src = replayUrl; vid.style.display = ''; vid.load(); }
@@ -1024,8 +1034,9 @@
   // ---------------------------- sharing ----------------------------------
   function buildResultData(m) {
     const playerWon = m.result === 'win';
+    const draw = m.result === 'draw';
     const playerScore = playerWon ? 1 : 0;
-    const opponentScore = playerWon ? 0 : 1;
+    const opponentScore = draw || playerWon ? 0 : 1;
     return {
       result: m.result,
       stage: m.stage,
@@ -1090,8 +1101,7 @@
   }
 
   function drawSharePoster(g, w, h, data) {
-    const won = data.result === 'win';
-    const accent = won ? '#2ecc40' : '#ff4136';
+    const accent = resultAccent(data.result);
 
     g.imageSmoothingEnabled = false;
     g.fillStyle = '#070b20';
@@ -1114,7 +1124,7 @@
     g.strokeRect(58, 58, w - 116, h - 116);
 
     drawLogo(g, w / 2, 150);
-    drawCenteredFit(g, won ? 'YOU WIN' : 'YOU LOSE', w / 2, 260, 860, 86, accent);
+    drawCenteredFit(g, resultLabel(data.result), w / 2, 260, 860, 86, accent);
 
     drawScorePanel(g, 126, 350, 828, 230, data, accent);
 
@@ -1490,6 +1500,12 @@
   // ----------------------------- utils -----------------------------------
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function short(name) { return name.length > 11 ? name.slice(0, 10) + '.' : name; }
+  function resultLabel(result) {
+    return result === 'win' ? 'YOU WIN' : result === 'draw' ? 'DRAW' : 'YOU LOSE';
+  }
+  function resultAccent(result) {
+    return result === 'win' ? '#2ecc40' : result === 'draw' ? '#ffdc00' : '#ff4136';
+  }
 
   // =========================== INPUT WIRING =============================
   function wire() {

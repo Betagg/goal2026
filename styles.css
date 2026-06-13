@@ -254,6 +254,7 @@ html, body {
 .result-title { font-size: 24px; text-shadow: 3px 3px 0 var(--shadow); }
 .result-title.win { color: var(--green); }
 .result-title.lose { color: var(--red); }
+.result-title.draw { color: var(--yellow); }
 .replay {
   width: 100%;
   border: 3px solid #2b346b;
