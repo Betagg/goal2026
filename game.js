@@ -401,9 +401,9 @@
     m.result = result;
     m.goalSide = side;
     m.goalFlash = side ? 1 : 0;
-    m.celebrate = 2.2;
+    m.celebrate = result === 'win' ? 2.2 : 0;
     m.screenShake = side ? 14 : 6;
-    if (side) burstConfetti();
+    if (result === 'win') burstConfetti();
     stopAmbientCrowd(0.3);
     playResultSound(result);
 
