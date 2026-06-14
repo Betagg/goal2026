@@ -81,7 +81,7 @@
     kickoff: 'assets/sfx/referee-whistle.wav',
     ambient: 'assets/sfx/match-crowd-live-random.mp3',
     win: 'assets/sfx/leeds-last-minute-goal.mp3',
-    lose: 'assets/sfx/people-moaning-sadly.mp3',
+    lose: 'assets/sfx/crowd-booing-howardv.mp3',
   };
 
   // ----------------------------- state ----------------------------------
@@ -942,8 +942,8 @@
       return;
     }
     const name = result === 'win' ? 'win' : 'lose';
-    const volume = result === 'win' ? 0.9 : 0.78;
-    const maxDuration = result === 'win' ? 7.0 : 5.0;
+    const volume = result === 'win' ? 0.9 : 0.82;
+    const maxDuration = result === 'win' ? 7.0 : 6.2;
     playSfx(name, { volume, maxDuration, fadeOut: 0.8 }).catch(() => {
       playSyntheticResultSound(result);
     });

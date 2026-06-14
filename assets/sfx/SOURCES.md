@@ -10,9 +10,12 @@ All files are stored locally so the game can run without loading sound assets fr
 | `leeds-last-minute-goal.mp3` | Win / goal celebration | User-provided file: `3-how-leeds-united-fans-rejoice-over-last-minute-goal-2026-06-14 (1).mp3` | User-provided |
 | `argentina-fans-victory.mp3` | Previous win / goal celebration asset, kept as fallback material | User-provided file: `球迷庆祝 阿根廷 24年赢得世界杯.MP3` | User-provided |
 | `huge-crowd-cheering-victory.mp3` | Previous win / goal celebration asset, kept as fallback material | Mixkit: `Huge crowd cheering victory`, SFX ID 462 | Mixkit License |
-| `people-moaning-sadly.mp3` | Loss feedback | Mixkit: `People moaning sadly`, SFX ID 469 | Mixkit License |
+| `crowd-booing-howardv.mp3` | Loss feedback: realistic disappointed crowd booing | Freesound: `crowd booing` by HowardV, sound ID 264378; low-quality MP3 preview used locally for web size | Creative Commons 0 |
+| `people-moaning-sadly.mp3` | Previous loss feedback asset, kept as fallback material | Mixkit: `People moaning sadly`, SFX ID 469 | Mixkit License |
 
 Source pages:
 - https://commons.wikimedia.org/wiki/File:218318_splicesound_referee-whistle-blow-gymnasium.wav
+- https://freesound.org/people/HowardV/sounds/264378/
+- https://creativecommons.org/publicdomain/zero/1.0/
 - https://mixkit.co/free-sound-effects/crowd/
 - https://mixkit.co/license/
