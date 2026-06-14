@@ -79,7 +79,7 @@
   const SAVE_KEY = 'goal2026.save.v1';
   const SFX = {
     kickoff: 'assets/sfx/referee-whistle.wav',
-    ambient: 'assets/sfx/stadium-joy-shouting-crowd.mp3',
+    ambient: 'assets/sfx/match-crowd-live-random.mp3',
     win: 'assets/sfx/argentina-fans-victory.mp3',
     lose: 'assets/sfx/people-moaning-sadly.mp3',
   };
@@ -870,6 +870,9 @@
     const volume = opts.volume ?? 1;
     const delay = opts.delay ?? 0;
     const start = ctxA.currentTime + delay;
+    const minRemaining = opts.minRemaining ?? 0;
+    const maxOffset = Math.max(0, buffer.duration - minRemaining);
+    const offset = opts.randomOffset ? Math.random() * maxOffset : (opts.offset ?? 0);
 
     source.buffer = buffer;
     source.loop = !!opts.loop;
@@ -884,7 +887,7 @@
       gain.gain.setValueAtTime(volume, start);
     }
 
-    source.start(start);
+    source.start(start, offset);
     if (opts.maxDuration) {
       const stopAt = start + opts.maxDuration;
       if (opts.fadeOut) {
@@ -904,7 +907,7 @@
 
   function startAmbientCrowd() {
     stopAmbientCrowd(0);
-    playSfx('ambient', { volume: 0.16, loop: true, fadeIn: 1.1 })
+    playSfx('ambient', { volume: 0.16, loop: true, fadeIn: 1.1, randomOffset: true, minRemaining: MATCH_SECONDS + 2 })
       .then(node => {
         if (screen !== 'match' || !match || match.over) {
           fadeOutNode(node, 0.2);
